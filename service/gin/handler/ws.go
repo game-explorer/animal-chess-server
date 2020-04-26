@@ -61,10 +61,13 @@ func Ws(root gin.IRouter) {
 			for msg := range msgs {
 				switch msg.Type {
 				default:
-					err := animal.HandMessage(&msg)
+					rsp, err := animal.HandMessage(playerId, &msg)
 					if err != nil {
 						log.Errorf("HandMessage err: %v, raw:% s", err, msg.Raw)
 						continue
+					}
+					for _, v := range rsp {
+						v.ToPlayerId
 					}
 				}
 			}

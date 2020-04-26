@@ -8,7 +8,8 @@ import (
 
 // 房间管理着一局棋局和玩家
 type Room struct {
-	Id int64 `json:"id" xorm:"pk autoincr int(11)"`
+	Id           int64        `json:"id" xorm:"pk autoincr int(11)"`
+	PlayerId     int64        `json:"player_id" xorm:"int(11)"` // 房主
 	PlayerStatus PlayerStatus `json:"player_status" xorm:"json"`
 }
 

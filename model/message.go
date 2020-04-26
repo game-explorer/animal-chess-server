@@ -3,9 +3,8 @@ package model
 import "encoding/json"
 
 type Message struct {
-	PlayerId int64 // 谁的动作
-	Type     MessageType
-	Raw      []byte `json:"raw"`
+	Type MessageType
+	Raw  json.RawMessage `json:"raw"`
 }
 
 type MessageType string
