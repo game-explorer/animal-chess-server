@@ -2,12 +2,13 @@ package main
 
 import (
 	"github.com/game-explorer/animal-chess-server/app/config"
+	"github.com/game-explorer/animal-chess-server/lib/log"
 	"github.com/game-explorer/animal-chess-server/lib/signal"
+	"github.com/game-explorer/animal-chess-server/repository"
 	"github.com/game-explorer/animal-chess-server/service/gin"
 	"github.com/urfave/cli/v2"
 	"os"
 	"sync"
-	"time"
 )
 
 func main() {
@@ -17,40 +18,21 @@ func main() {
 	c.Version = ""
 	c.Action = func(*cli.Context) error {
 		ctx, cancel := signal.NewTermContext()
-		if config.IsCi {
-			// 如果是测试, 则等待1s关闭程序
-			go func() {
-				time.Sleep(1 * time.Second)
-				cancel()
-			}()
-		}
+		defer cancel()
 
-		if !config.IsCi {
-			err := repository.InitMysql()
-			if err != nil {
-				return err
-			}
+		err := repository.InitMysql()
+		if err != nil {
+			return err
 		}
 
 		var wg sync.WaitGroup
 
 		wg.Add(1)
 		go func() {
-			s := gin.New()
+			s := gin.New(config.App.Debug)
 			log.Infof("http listen '%s'", config.App.HttpAddr)
-			s.Listen(config.App.HttpAddr, ctx)
+			s.Listen(ctx, config.App.HttpAddr)
 			log.Info("http shutdown")
-			wg.Done()
-		}()
-
-		wg.Add(1)
-		go func() {
-			log.Infof("worker running")
-			err := worker.RunWhenPublish(ctx)
-			if err != nil {
-				panic(err)
-			}
-			log.Info("worker shutdown")
 			wg.Done()
 		}()
 

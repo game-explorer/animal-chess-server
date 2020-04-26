@@ -14,6 +14,8 @@ var App struct {
 	// LogDebug开启后会使用颜色
 	LogDebug bool `yaml:"log_debug"`
 
+	HttpAddr string `yaml:"http_addr"`
+
 	Mysql struct {
 		AnimateChess string `yaml:"animate-chess"`
 	} `yaml:"mysql"`

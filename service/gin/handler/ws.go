@@ -7,12 +7,25 @@ import (
 	"github.com/game-explorer/animal-chess-server/model"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/websocket"
-	"time"
+	"strconv"
 )
 
-func route(root gin.IRouter) {
+func Ws(root gin.IRouter) {
 	root.GET("/ws", func(ctx *gin.Context) {
 		websocket.Handler.ServeHTTP(func(conn *websocket.Conn) {
+			// 如果头部没有playerId就关闭连接
+			playerIdStr, _ := ctx.GetQuery("player_id")
+			if playerIdStr == "" {
+				playerIdStr = ctx.GetHeader("PLAYER_ID")
+			}
+
+			playerId, _ := strconv.ParseInt(playerIdStr, 10, 54)
+
+			if playerId == 0 {
+				_ = conn.Close()
+				return
+			}
+
 			stop := make(chan struct{})
 
 			// 使用chan接受客户端消息
@@ -23,6 +36,7 @@ func route(root gin.IRouter) {
 					err := websocket.Message.Receive(conn, &msg)
 					if err != nil {
 						log.Errorf("ws Receive err: %v", err)
+						// TODO 根据错误类型判断
 						//time.Sleep(1 * time.Second)
 						break
 					}
@@ -37,39 +51,17 @@ func route(root gin.IRouter) {
 				close(msgs)
 			}()
 
-			// 6s内没有登录就关闭
-			logined := make(chan struct{})
-			go func() {
-				select {
-				case <-time.After(6 * time.Second):
-					close(stop)
-				case <-logined:
-				}
-			}()
-			var playerId int64
+			sessionhub.Player.Add(playerId, conn)
 
 			defer func() {
-				if playerId != 0 {
-					sessionhub.Player.Del(playerId)
-
-				}
+				sessionhub.Player.Del(playerId)
 			}()
+
 			// 处理消息
 			for msg := range msgs {
 				switch msg.Type {
-				case model.Login:
-					close(logined)
-
-					var m model.LoginMsg
-					err := msg.To(&m)
-					if err != nil {
-						log.Errorf("msg.To err: %v, raw:% s", err, msg.Raw)
-						continue
-					}
-					playerId = m.PlayerId
-					sessionhub.Player.Add(playerId, conn)
 				default:
-					err:=animal.HandMessage(&msg)
+					err := animal.HandMessage(&msg)
 					if err != nil {
 						log.Errorf("HandMessage err: %v, raw:% s", err, msg.Raw)
 						continue
