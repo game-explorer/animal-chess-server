@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/websocket"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func Ws(root gin.IRouter) {
@@ -26,19 +28,33 @@ func Ws(root gin.IRouter) {
 				return
 			}
 
+			// 获取玩家状态(是否在房间中), 让前端做对应的动作
+			// 如让用户选择是否重新加入房间
+
 			stop := make(chan struct{})
 
 			// 使用chan接受客户端消息
 			var msgs = make(chan model.Message, 1)
 			go func() {
 				for {
-					var msg model.Message
-					err := websocket.Message.Receive(conn, &msg)
+					var bs string
+					err := websocket.Message.Receive(conn, &bs)
 					if err != nil {
+						es := err.Error()
+						if strings.Contains(es, "EOF") || strings.Contains(es, "use of closed network connection") {
+							break
+						}
 						log.Errorf("ws Receive err: %v", err)
-						// TODO 根据错误类型判断
-						//time.Sleep(1 * time.Second)
-						break
+						time.Sleep(1 * time.Second)
+						continue
+					}
+
+					var msg model.Message
+					err = msg.Unmarshal([]byte(bs))
+					if err != nil {
+						log.Errorf("Unmarshal err: %v", err)
+						time.Sleep(1 * time.Second)
+						continue
 					}
 
 					select {
@@ -63,11 +79,23 @@ func Ws(root gin.IRouter) {
 				default:
 					rsp, err := animal.HandMessage(playerId, &msg)
 					if err != nil {
-						log.Errorf("HandMessage err: %v, raw:% s", err, msg.Raw)
+						e := websocket.Message.Send(conn, string(model.NewErrorMsg(err).Marshal()))
+						if e != nil {
+							log.Errorf("websocket.Message.Send %v", e)
+						}
 						continue
 					}
 					for _, v := range rsp {
-						v.ToPlayerId
+						session, exist := sessionhub.Player.Get(v.ToPlayerId)
+						if exist {
+							e := websocket.Message.Send(session.Conn, string(v.Msg.Marshal()))
+							if e != nil {
+								log.Errorf("websocket.Message.Send %v", e)
+							}
+						} else {
+							// 不存在可能是掉线了, 直接跳过发送
+							log.Warningf("player %s is offline", v.ToPlayerId)
+						}
 					}
 				}
 			}

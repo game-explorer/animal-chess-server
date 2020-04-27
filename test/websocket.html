@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Websocket</title>
+</head>
+<body>
+<script>
+  var uid = getQueryString('id')
+
+  var ws = new WebSocket("ws://localhost:9000/ws?player_id=" + uid);
+
+  // 获取参数
+  function getQueryString(name) {
+    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+      return unescape(r[2]);
+    }
+    return null;
+  }
+
+  ws.onopen = function (evt) {
+    console.log("Connection open ...");
+    var roomId = getQueryString('room_id')
+    if (roomId) {
+      ws.send(`{"type":"join_room", "raw":{"room_id": ${roomId}}}`);
+    } else {
+      ws.send(`{"type":"create_room"}`);
+    }
+  };
+
+  ws.onmessage = function (event) {
+    let msg = JSON.parse(event.data)
+    switch (msg.type) {
+      case "create_room":
+        // 加入房间
+        ws.send(`{"type":"join_room", "raw":{"room_id": ${msg.raw.room_id}}}`);
+        break
+    }
+    console.log("Received Message: " + event.data);
+    // ws.close();
+  };
+
+  ws.onclose = function (evt) {
+    console.log("Connection closed.");
+  };
+
+
+</script>
+
+</body>
+</html>

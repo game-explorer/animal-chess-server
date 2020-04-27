@@ -3,14 +3,14 @@ package model
 import "encoding/json"
 
 type Message struct {
-	Type MessageType
+	Type MessageType     `json:"type"`
 	Raw  json.RawMessage `json:"raw"`
 }
 
 type MessageType string
 
 const (
-	Login MessageType = "login" // 登录, 上传PlayerId
+	Err MessageType = "err" // 错误
 	// 玩家动作
 	CreateRoom MessageType = "create_room" // 创建房间
 	JoinRoom   MessageType = "join_room"   // 加入房间
@@ -23,14 +23,51 @@ const (
 	End MessageType = "end" // 结束, 消息体包含结果(谁胜利了)
 )
 
-type LoginMsg struct {
+type ErrorMsgRaw struct {
+	Msg string `json:"msg"`
+}
+
+type LoginMsgRaw struct {
 	PlayerId int64 `json:"player_id"`
 }
 
-func (m *Message) To(i interface{}) (err error) {
+type JoinRoomMsgRawIn struct {
+	RoomId int64 `json:"room_id"`
+}
+
+type JoinRoomMsgRawOut struct {
+	RoomId   int64 `json:"room_id"`
+	PlayerId int64 `json:"player_id"`
+}
+
+func NewErrorMsg(err error) Message {
+	e := Message{Type: Err}
+	e.MarshalRaw(ErrorMsgRaw{Msg: err.Error()})
+	return e
+}
+
+func (m *Message) UnmarshalRaw(i interface{}) (err error) {
 	err = json.Unmarshal(m.Raw, i)
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (m *Message) MarshalRaw(i interface{}) {
+	m.Raw, _ = json.Marshal(i)
+	return
+}
+
+func (m *Message) Unmarshal(bs []byte) (err error) {
+	err = json.Unmarshal(bs, m)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (m Message) Marshal() (bs []byte) {
+	bs, _ = json.Marshal(m)
 	return
 }

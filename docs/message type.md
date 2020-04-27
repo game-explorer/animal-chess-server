@@ -8,7 +8,7 @@ type: create_room
 ```
 type: join_room
 raw: 
-  id: 1
+  room_id: 1
 ```
 #### 选择阵营
 #### 摆放棋子并准备
@@ -21,14 +21,16 @@ raw:
 ```
 type: create_room
 raw: 
-  id: 1 // 房间号
+  room_id: 1 // 房间号
 ```
 
 #### 加入房间
+自己或者其他玩家加入房间
+
 ```
 type: join_room
 raw:
-  player_id: 1 // 加入房间的玩家id，可能是其他玩家。
+  player_id: 1 // 加入房间的玩家id，可能是其他玩家
 ```
 
 #### 选择阵营

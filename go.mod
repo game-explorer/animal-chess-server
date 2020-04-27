@@ -11,4 +11,5 @@ require (
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/net v0.0.0-20200421231249-e086a090c8fd
 	gopkg.in/yaml.v2 v2.2.8
+	xorm.io/core v0.7.2-0.20190928055935-90aeac8d08eb
 )

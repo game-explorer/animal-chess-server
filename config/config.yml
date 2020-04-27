@@ -6,4 +6,4 @@ http_addr: ":9000"
 redis: "redis"
 
 mysql:
-  animal-chess: "root:nameim_^9i8@tcp(test.zhuzi.me:3306)/animal-chess"
+  animal_chess: "root:nameim_^9i8@tcp(test.zhuzi.me:3306)/animal-chess"

@@ -17,7 +17,7 @@ var App struct {
 	HttpAddr string `yaml:"http_addr"`
 
 	Mysql struct {
-		AnimateChess string `yaml:"animate-chess"`
+		AnimalChess string `yaml:"animal_chess"`
 	} `yaml:"mysql"`
 }
 
