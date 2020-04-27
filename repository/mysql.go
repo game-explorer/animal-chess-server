@@ -13,6 +13,7 @@ type Mysql struct {
 }
 
 func (m Mysql) CreateRoom(room *model.Room) (roomId int64, err error) {
+	room.Status = model.WaitStatus
 	_, err = engine.Insert(room)
 	if err != nil {
 		err = fmt.Errorf("mysql.Insert %w", err)
@@ -73,6 +74,16 @@ func (m Mysql) GetPlayerByRoomId(roomId int64) (r []model.Player, err error) {
 	err = engine.Where("in_room_id=?", roomId).Find(&r)
 	if err != nil {
 		err = fmt.Errorf("mysql.Find User %w", err)
+		return
+	}
+
+	return
+}
+
+func (m Mysql) GetPlayer(playerId int64) (r model.Player, exist bool, err error) {
+	exist, err = engine.Where("id=?", playerId).Get(&r)
+	if err != nil {
+		err = fmt.Errorf("mysql.Get User %w", err)
 		return
 	}
 

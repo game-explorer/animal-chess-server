@@ -10,7 +10,16 @@ type Room struct {
 	PlayerId      int64        `json:"player_id" xorm:"int(11)"` // 房主
 	PlayerStatus  PlayerStatus `json:"player_status" xorm:"json"`
 	FirstPlayerId int64        `json:"first_player_id" xorm:"int(11)"` // 先手的人的id
+	Status        RoomStatus   `json:"status" xorm:"tinyint(1)"`       // 游戏状态
 }
+
+type RoomStatus int64
+
+const (
+	WaitStatus    RoomStatus = 1 // 等待开启游戏
+	PlayingStatus RoomStatus = 2 // 正在游戏中
+	//EndStatus     RoomStatus = 3 // 结算中
+)
 
 // 第一个人就是蓝色方, 第二个是红色方
 type PlayerStatus []*PlayerStatusOne
@@ -18,12 +27,11 @@ type PlayerStatus []*PlayerStatusOne
 type PlayerStatusOne struct {
 	PlayerId int64  `json:"player_id"`
 	Ready    bool   `json:"ready"`
+	Camp     string `json:"camp"` // red, blue 第一个进入房间的是blue
 	Pieces   Pieces `json:"pieces"`
 }
 
-type Pieces struct {
-	P map[Point]Piece `json:"p"`
-}
+type Pieces map[Point]Piece
 
 // 方便存储到数据库, 使用string表示
 type Point string
@@ -63,20 +71,42 @@ func (p PlayerStatus) IsAllReady() bool {
 }
 
 // 加入房间, 不是准备状态
-func (p *PlayerStatus) Join(playerId int64) (err error) {
+func (p *PlayerStatus) Join(playerId int64) (s PlayerStatusOne, err error) {
 	_, exist := p.Get(playerId)
 	if exist {
 		return
 	}
 
 	if len(*p) >= 2 {
-		return errors.New("房间人数已满")
+		err = errors.New("房间人数已满")
+		return
+	}
+	camp := "blue"
+	if len(*p) == 1 {
+		camp = "red"
 	}
 
-	*p = append(*p, &PlayerStatusOne{
+	s = PlayerStatusOne{
 		PlayerId: playerId,
-		Ready:    true,
-	})
+		Ready:    false,
+		Camp:     camp,
+		Pieces:   nil,
+	}
+	*p = append(*p, &s)
+	return
+}
+
+// 离开房间
+func (p *PlayerStatus) Leave(playerId int64) (err error) {
+	x := PlayerStatus{}
+	for _, v := range *p {
+		if v.PlayerId == playerId {
+			continue
+		}
+		x = append(x, v)
+	}
+
+	*p = x
 	return
 }
 

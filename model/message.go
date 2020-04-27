@@ -11,37 +11,62 @@ type MessageType string
 
 const (
 	Err MessageType = "err" // 错误
+
+	// 游戏状态
+	GameStatus MessageType = "game_status" // 当用户登录上来之后需要下发游戏状态
+
 	// 玩家动作
 	CreateRoom MessageType = "create_room" // 创建房间
 	JoinRoom   MessageType = "join_room"   // 加入房间
-	Ready      MessageType = "ready"       // 选择阵营
-	SetPiece   MessageType = "set-piece"   // 摆放棋子
+	LeaveRoom  MessageType = "leave_room"  // 离开房间
+	SetPiece   MessageType = "set-piece"   // 摆放棋子 并准备
 	Move       MessageType = "move"        // 移动棋子
 
-	// 系统发送的消息
+	// 系统发送游戏的消息
+	Start       MessageType = "start"        // 开始游戏
 	Fit MessageType = "fit" // 两个棋子打架了, 消息体中包含结果
 	End MessageType = "end" // 结束, 消息体包含结果(谁胜利了)
+
 )
 
-type ErrorMsgRaw struct {
-	Msg string `json:"msg"`
-}
+type (
+	ErrorMsgRaw struct {
+		Msg string `json:"msg"`
+	}
+	LoginMsgRaw struct {
+		PlayerId int64 `json:"player_id"`
+	}
+)
 
-type LoginMsgRaw struct {
+type (
+	JoinRoomMsgRaw struct {
+		RoomId   int64  `json:"room_id"`
+		PlayerId int64  `json:"player_id,omitempty"`
+		Camp     string `json:"camp"`
+	}
+)
+
+type LeaveRoomMsgRaw struct {
 	PlayerId int64 `json:"player_id"`
 }
 
-type JoinRoomMsgRawIn struct {
-	RoomId int64 `json:"room_id"`
+type GameStatusMsgRaw struct {
+	Status RoomStatus `json:"status"`
 }
 
-type JoinRoomMsgRawOut struct {
-	RoomId   int64 `json:"room_id"`
-	PlayerId int64 `json:"player_id"`
+type SetPieceMsgRaw struct {
+	Pieces   Pieces `json:"pieces"`
+	PlayerId int64  `json:"player_id,omitempty"`
 }
 
-func NewErrorMsg(err error) Message {
-	e := Message{Type: Err}
+type MoveMsgRaw struct {
+	Form     Point `json:"form"`
+	To       Point `json:"to"`
+	PlayerId int64 `json:"player_id,omitempty"`
+}
+
+func NewErrorMsg(err error) *Message {
+	e := &Message{Type: Err}
 	e.MarshalRaw(ErrorMsgRaw{Msg: err.Error()})
 	return e
 }
