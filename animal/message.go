@@ -21,6 +21,7 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		var roomId int64
 		roomId, err = r.CreateRoom(&model.Room{
 			PlayerId: playerId,
+			Status:   model.WaitPeopleStatus,
 		})
 		if err != nil {
 			return
@@ -51,7 +52,9 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			err = e
 			return
 		}
-		// 当再次进入房间的时候, 需要下发全部的游戏信息: 人员, 游戏状态, 棋子
+		if room.PlayerStatus.IsFull() {
+			room.Status = model.WaitReadStatus
+		}
 
 		// 更新房间
 		err = r.SaveRoom(&room)
@@ -80,6 +83,7 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 				RoomId:   room.Id,
 				PlayerId: playerId,
 				Camp:     status.Camp,
+				Status:   room.Status,
 			}),
 		})
 	case model.LeaveRoom:
@@ -142,14 +146,18 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			return
 		}
 
-		err = room.PlayerStatus.Ready(playerId, m.Pieces)
+		err = room.PlayerStatus.Ready(playerId)
 		if err != nil {
 			return
 		}
 
-		err = r.SaveRoom(&room)
-		if err != nil {
-			return
+		// 更新房间中的棋子
+		ps, _ := room.PlayerStatus.Get(playerId)
+		if ps.IsP1() {
+			// p1
+			room.TablePieces.P1 = m.Pieces
+		} else {
+			room.TablePieces.P2 = m.Pieces
 		}
 
 		// 发送消息给房间内所有人
@@ -169,10 +177,6 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		// 如果摆放完成就开始游戏
 		if room.PlayerStatus.IsAllReady() {
 			room.Status = model.PlayingStatus
-			err = r.SaveRoom(&room)
-			if err != nil {
-				return
-			}
 
 			rsp = append(rsp, buildRsp(ids, model.Message{
 				Type: model.Start,
@@ -181,6 +185,74 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 
 			// 通知谁先手
 		}
+
+		// 记得保存房间
+		err = r.SaveRoom(&room)
+		if err != nil {
+			return
+		}
+	case model.GetRoom:
+		room, exist, e := getRoomByPlayer(r, playerId)
+		if e != nil {
+			err = e
+			return
+		}
+		if !exist {
+			err = errors.New("not found room")
+			return
+		}
+
+		rsp = buildRsp([]int64{playerId}, model.Message{
+			Type: model.GetRoom,
+			Raw: buildJson(model.GetRoomRaw{
+				Status:       room.Status,
+				PlayerStatus: room.PlayerStatus,
+				TablePieces:  room.TablePieces,
+			}),
+		})
+	case model.Move:
+		// 走棋
+		var m model.MoveMsgRaw
+		msg.UnmarshalRaw(&m)
+
+		room, e := getRoomByPlayerMust(r, playerId)
+		if e != nil {
+			err = e
+			return
+		}
+
+		ps, _ := room.PlayerStatus.Get(playerId)
+		if ps.IsP1() {
+			err = room.TablePieces.P1.Move(m.Form, m.To)
+			if err != nil {
+				return
+			}
+		} else {
+			err = room.TablePieces.P2.Move(m.Form, m.To)
+			if err != nil {
+				return
+			}
+		}
+
+		err = r.SaveRoom(&room)
+		if err != nil {
+			return
+		}
+
+		// 发送消息给房间内所有人
+		ids, e := getPlayerIdsInRoom(r, room.Id)
+		if e != nil {
+			err = e
+			return
+		}
+		rsp = buildRsp(ids, model.Message{
+			Type: model.Move,
+			Raw: buildJson(model.MoveMsgRaw{
+				Form:     m.Form,
+				To:       m.To,
+				PlayerId: playerId,
+			}),
+		})
 	}
 
 	return
@@ -213,4 +285,51 @@ func getPlayerIdsInRoom(r repository.Interface, roomId int64) (ids []int64, err 
 		ids[i] = v.Id
 	}
 	return
+}
+
+func getRoomByPlayer(r repository.Interface, playerId int64) (room model.Room, exist bool, err error) {
+	p, _, e := r.GetPlayer(playerId)
+	if e != nil {
+		err = e
+		return
+	}
+
+	room, exist, err = r.GetRoom(p.InRoomId)
+	if err != nil {
+		return
+	}
+
+	return
+}
+func getRoomByPlayerMust(r repository.Interface, playerId int64) (room model.Room, err error) {
+	var exist bool
+	room, exist, err = getRoomByPlayer(r, playerId)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = errors.New("not found room")
+		return
+	}
+	return
+}
+
+func getPlayerIdsByPlayer(r repository.Interface, playerId int64) (ids []int64, err error) {
+	p, _, e := r.GetPlayer(playerId)
+	if e != nil {
+		err = e
+		return
+	}
+
+	room, exist, e := r.GetRoom(p.InRoomId)
+	if e != nil {
+		err = e
+		return
+	}
+	if !exist {
+		err = errors.New("not found room")
+		return
+	}
+
+	return getPlayerIdsInRoom(r, room.Id)
 }

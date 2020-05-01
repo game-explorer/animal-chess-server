@@ -19,10 +19,7 @@ func SendMessageRaw(c *websocket.Conn, types model.MessageType, raw interface{})
 		Type: types,
 		Raw:  nil,
 	}
-	err = msg.UnmarshalRaw(raw)
-	if err != nil {
-		return
-	}
+	msg.MarshalRaw(raw)
 
 	err = websocket.Message.Send(c, string(msg.Marshal()))
 	if err != nil {

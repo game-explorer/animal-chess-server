@@ -51,7 +51,7 @@ func Handle(conn *websocket.Conn) {
 			return
 		}
 
-		e := ws.SendMessageRaw(conn, model.GameStatus, model.GameStatusMsgRaw{Status: room.Status})
+		e := ws.SendMessageRaw(conn, model.GameStatus, model.GameStatusMsgRaw{Status: room.Status, RoomId: room.Id})
 		if e != nil {
 			log.Errorf("SendMessageRaw %v", e)
 		}
@@ -125,7 +125,7 @@ func Handle(conn *websocket.Conn) {
 					}
 				} else {
 					// 不存在可能是掉线了, 直接跳过发送
-					log.Warningf("player %s is offline", v.ToPlayerId)
+					log.Warningf("player %d is offline", v.ToPlayerId)
 				}
 			}
 		}

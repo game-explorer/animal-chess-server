@@ -13,7 +13,7 @@ type Mysql struct {
 }
 
 func (m Mysql) CreateRoom(room *model.Room) (roomId int64, err error) {
-	room.Status = model.WaitStatus
+	room.Status = model.WaitPeopleStatus
 	_, err = engine.Insert(room)
 	if err != nil {
 		err = fmt.Errorf("mysql.Insert %w", err)

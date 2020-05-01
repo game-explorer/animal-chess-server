@@ -11,15 +11,24 @@ type Room struct {
 	PlayerStatus  PlayerStatus `json:"player_status" xorm:"json"`
 	FirstPlayerId int64        `json:"first_player_id" xorm:"int(11)"` // 先手的人的id
 	Status        RoomStatus   `json:"status" xorm:"tinyint(1)"`       // 游戏状态
+	TablePieces   TablePieces  `json:"table_pieces" xorm:"json"`       // 当前桌面上的棋子, 包括两方
 }
 
 type RoomStatus int64
 
 const (
-	WaitStatus    RoomStatus = 1 // 等待开启游戏
-	PlayingStatus RoomStatus = 2 // 正在游戏中
-	//EndStatus     RoomStatus = 3 // 结算中
+	WaitPeopleStatus RoomStatus = 1 // 等待玩家加入
+	WaitReadStatus   RoomStatus = 2 // 等待准备
+	PlayingStatus    RoomStatus = 3 // 正在游戏中
+	EndStatus        RoomStatus = 4 // 游戏结束
 )
+
+type TablePieces struct {
+	P1    Pieces  `json:"p1"`     // 蓝方的棋子
+	P2    Pieces  `json:"p2"`     // 红方的棋子
+	P1Die []Piece `json:"p1_die"` // 蓝方死掉的棋子
+	P2Die []Piece `json:"p2_die"` // 红方死掉的棋子
+}
 
 // 第一个人就是蓝色方, 第二个是红色方
 type PlayerStatus []*PlayerStatusOne
@@ -28,10 +37,26 @@ type PlayerStatusOne struct {
 	PlayerId int64  `json:"player_id"`
 	Ready    bool   `json:"ready"`
 	Camp     string `json:"camp"` // red, blue 第一个进入房间的是blue
-	Pieces   Pieces `json:"pieces"`
+}
+
+func (p PlayerStatusOne) IsP1() bool {
+	return p.Camp == "blue"
 }
 
 type Pieces map[Point]Piece
+
+func (p *Pieces) Move(from Point, to Point) error {
+	pi, ok := (*p)[from]
+	if !ok {
+		return errors.New("not has point: " + string(from))
+	}
+
+	// todo check 点是否能走
+
+	delete(*p, from)
+	(*p)[to] = pi
+	return nil
+}
 
 // 方便存储到数据库, 使用string表示
 type Point string
@@ -70,6 +95,14 @@ func (p PlayerStatus) IsAllReady() bool {
 	return true
 }
 
+func (p PlayerStatus) IsFull() bool {
+	if len(p) != 2 {
+		return false
+	}
+
+	return true
+}
+
 // 加入房间, 不是准备状态
 func (p *PlayerStatus) Join(playerId int64) (s PlayerStatusOne, err error) {
 	_, exist := p.Get(playerId)
@@ -77,7 +110,7 @@ func (p *PlayerStatus) Join(playerId int64) (s PlayerStatusOne, err error) {
 		return
 	}
 
-	if len(*p) >= 2 {
+	if p.IsFull() {
 		err = errors.New("房间人数已满")
 		return
 	}
@@ -90,7 +123,6 @@ func (p *PlayerStatus) Join(playerId int64) (s PlayerStatusOne, err error) {
 		PlayerId: playerId,
 		Ready:    false,
 		Camp:     camp,
-		Pieces:   nil,
 	}
 	*p = append(*p, &s)
 	return
@@ -121,9 +153,8 @@ func (p *PlayerStatus) Get(playerId int64) (*PlayerStatusOne, bool) {
 }
 
 // 安放棋子并准备开始
-func (p *PlayerStatus) Ready(playerId int64, pi Pieces) (err error) {
+func (p *PlayerStatus) Ready(playerId int64, ) (err error) {
 	if one, exist := p.Get(playerId); exist {
-		one.Pieces = pi
 		one.Ready = true
 	}
 	return
