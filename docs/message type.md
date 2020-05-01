@@ -1,6 +1,16 @@
 ## WS地址
 ws://localhost:9000/ws?player_id=1
 
+## Model & Const
+```
+const (
+	WaitPeopleStatus RoomStatus = 1 // 等待玩家加入
+	WaitReadStatus   RoomStatus = 2 // 等待准备
+	PlayingStatus    RoomStatus = 3 // 正在游戏中
+	EndStatus        RoomStatus = 4 // 游戏结束
+)
+```
+
 ## 上行
 #### 创建房间
 ```
@@ -14,6 +24,8 @@ raw:
   room_id: 1
 ```
 #### 摆放棋子并准备
+如果收到join_room消息并且status=2(准备游戏中), 则开始准备(摆放棋子)流程
+
 ```
 type: set-piece
 raw: 
@@ -22,6 +34,7 @@ raw:
     "2-3": 0
 ```
 #### 走棋
+
 ```
 type: move
 raw: 
@@ -55,6 +68,7 @@ type: join_room
 raw:
   player_id: 1 // 加入房间的玩家id，可能是其他玩家
   camp: 'red' // 阵营, red blue
+  status: 1 // 当前房间状态
 ```
 
 #### 摆放棋子并准备
@@ -67,7 +81,7 @@ raw:
   player_id: 1 
 ```
 #### 开始游戏
-当双方都摆放好棋子之后
+当双方都摆放好棋子(准备)之后, 会收到此消息
 
 ```
 type: start
