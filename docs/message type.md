@@ -50,7 +50,33 @@ raw:
 ```
 type: game_status
 raw:
-  status: 1 // 1: 等待开始游戏, 2: 正在游戏, 0: 没有进行游戏
+  status: 1 // RoomStatus
+```
+
+#### 获取ROOM
+用于断线重连
+```
+type: get_room
+raw: 
+  status: 2
+  player_status: 
+    - player_id: 1
+      read: true
+      camp: "blue"
+    - player_id: 2
+      read: true
+      camp: "blue"
+  table_pieces: // 棋子
+    p1: // 蓝方的棋子
+      "1-2": 1
+      "2-3": 0
+      xxx
+    p2: // 红方的棋子
+      "1-2": 1
+      "2-3": 0
+      xxx
+    p1_die: [0, 1, 2] // 蓝方死掉的棋子
+    p2_die: [0, 1, 2] // 红方死掉的棋子
 ```
 
 #### 创建房间成功
