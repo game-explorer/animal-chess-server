@@ -23,17 +23,17 @@ const (
 )
 
 // camp: p1/p2
-func (p TablePieces) Move(camp string, from Point, to Point) (fitResult string, err error) {
-	attack := p.P2 // 进攻方
-	other := p.P1
+func (tp TablePieces) Move(camp string, from Point, to Point) (fitResult string, err error) {
+	attack := tp.P2 // 进攻方
+	other := tp.P1
 
 	switch camp {
 	case "p1":
-		attack = p.P1
-		other = p.P2
+		attack = tp.P1
+		other = tp.P2
 	case "p2":
-		other = p.P1
-		attack = p.P2
+		other = tp.P1
+		attack = tp.P2
 	default:
 		err = errors.New("bad camp")
 		return
@@ -95,6 +95,19 @@ func (p TablePieces) Move(camp string, from Point, to Point) (fitResult string, 
 		}
 	}
 	return
+}
+
+// 返回赢方的camp: p1/p2
+func (tp TablePieces) IsWin() string {
+	if _, exist := tp.P1.Pieces[P2Lair]; exist {
+		return "p1"
+	}
+
+	if _, exist := tp.P2.Pieces[P1Lair]; exist {
+		return "p2"
+	}
+
+	return ""
 }
 
 type Pieces map[Point]Piece

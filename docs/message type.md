@@ -133,3 +133,11 @@ raw:
   player_id: 1
   fit_result: 1 // 打架结果 bothdie/p1win/p2win, 分别表示都死亡/p1赢/p2赢
 ```
+
+#### 游戏结束
+
+```
+type: end
+raw: 
+  win_player_id: 1
+```

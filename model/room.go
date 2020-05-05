@@ -10,6 +10,7 @@ type Room struct {
 	PlayerId       int64        `json:"player_id" xorm:"int(11)"` // 房主
 	PlayerStatus   PlayerStatus `json:"player_status" xorm:"json"`
 	TimeToPlayerId int64        `json:"timeto_player_id" xorm:"int(11)"` // 该谁走棋
+	WinPlayerId    int64        `json:"win_player_id" xorm:"int(11)"`    // 胜利方
 	Status         RoomStatus   `json:"status" xorm:"tinyint(1)"`        // 游戏状态
 	TablePieces    TablePieces  `json:"table_pieces" xorm:"json"`        // 当前桌面上的棋子, 包括两方
 }

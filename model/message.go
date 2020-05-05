@@ -81,6 +81,11 @@ type TimeToRaw struct {
 	PlayerId int64 `json:"player_id"` // 该谁走棋
 }
 
+// 游戏结束
+type EndRaw struct {
+	WinPlayerId int64 `json:"win_player_id"` // 该赢了
+}
+
 func NewErrorMsg(err error) *Message {
 	e := &Message{Type: Err}
 	e.MarshalRaw(ErrorMsgRaw{Msg: err.Error()})

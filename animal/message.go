@@ -167,7 +167,6 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 
 		// 更新房间中的棋子
 		if ps.IsP1() {
-			// p1
 			room.TablePieces.P1 = &model.TablePiecesOne{
 				Pieces: m.Pieces,
 			}
@@ -279,19 +278,40 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			}),
 		})
 
-		// 通知下家走棋
-		next, e := room.PlayerStatus.Next(playerId)
-		if e != nil {
-			err = e
-			return
+		// 判断游戏结束, 如果没结束就通知下架走棋
+		win := room.TablePieces.IsWin()
+		if win == "" {
+			// 通知下家走棋
+			next, e := room.PlayerStatus.Next(playerId)
+			if e != nil {
+				err = e
+				return
+			}
+			room.TimeToPlayerId = next.PlayerId
+			rsp = append(rsp, buildRsp(ids, model.Message{
+				Type: model.TimeTo,
+				Raw: buildJson(model.TimeToRaw{
+					PlayerId: next.PlayerId,
+				}),
+			})...)
+		} else {
+			room.Status = model.EndStatus
+			if win == "p1" {
+				winner, _ := room.PlayerStatus.GetP1()
+				room.WinPlayerId = winner.PlayerId
+				rsp = append(rsp, buildRsp(ids, model.Message{
+					Type: model.End,
+					Raw:  buildJson(model.EndRaw{WinPlayerId: winner.PlayerId}),
+				})...)
+			} else {
+				winner, _ := room.PlayerStatus.GetP2()
+				room.WinPlayerId = winner.PlayerId
+				rsp = append(rsp, buildRsp(ids, model.Message{
+					Type: model.End,
+					Raw:  buildJson(model.EndRaw{WinPlayerId: winner.PlayerId}),
+				})...)
+			}
 		}
-		room.TimeToPlayerId = next.PlayerId
-		rsp = append(rsp, buildRsp(ids, model.Message{
-			Type: model.TimeTo,
-			Raw: buildJson(model.TimeToRaw{
-				PlayerId: next.PlayerId,
-			}),
-		})...)
 
 		err = r.SaveRoom(&room)
 		if err != nil {
