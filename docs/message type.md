@@ -62,21 +62,22 @@ raw:
   player_status: 
     - player_id: 1
       read: true
-      camp: "blue"
+      camp: "p1"
     - player_id: 2
       read: true
-      camp: "blue"
+      camp: "p2"
   table_pieces: // 棋子
-    p1: // 蓝方的棋子
-      "1-2": 1
-      "2-3": 0
-      xxx
-    p2: // 红方的棋子
-      "1-2": 1
-      "2-3": 0
-      xxx
-    p1_die: [0, 1, 2] // 蓝方死掉的棋子
-    p2_die: [0, 1, 2] // 红方死掉的棋子
+    p1: // p1的棋子
+      pieces:
+        "1-2": 1
+        "2-3": 0
+      die: [0, 1, 2] // p1死掉的棋子
+    p2: // p2的棋子
+      pieces:
+        "1-2": 1
+        "2-3": 0
+      die: [0, 1, 2] // p2死掉的棋子
+
 ```
 
 #### 创建房间成功
@@ -93,7 +94,7 @@ raw:
 type: join_room
 raw:
   player_id: 1 // 加入房间的玩家id，可能是其他玩家
-  camp: 'red' // 阵营, red blue
+  camp: 'p2' // 阵营, p1/p2
   status: 1 // 当前房间状态
 ```
 
@@ -120,4 +121,15 @@ raw:
 type: timeto
 raw: 
   player_id: 1
+```
+
+#### 走棋结果
+
+```
+type: move
+raw: 
+  from: "1-2"
+  to: "1-3"
+  player_id: 1
+  fit_result: 1 // 打架结果 bothdie/p1win/p2win, 分别表示都死亡/p1赢/p2赢
 ```

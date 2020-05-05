@@ -21,12 +21,13 @@ const (
 	LeaveRoom  MessageType = "leave_room"  // 离开房间
 	GetRoom    MessageType = "get_room"    // 获取房间所有信息(重连恢复)
 	SetPiece   MessageType = "set-piece"   // 摆放棋子 并准备
-	Move       MessageType = "move"        // 移动棋子
+	Move       MessageType = "move"        // 移动棋子, 如果两个棋子打架则还会包括打架结果
 
 	// 系统发送游戏的消息
-	Start MessageType = "start" // 开始游戏
-	Fit   MessageType = "fit"   // 两个棋子打架了, 消息体中包含结果
-	End   MessageType = "end"   // 结束, 消息体包含结果(谁胜利了)
+	Start  MessageType = "start"   // 开始游戏
+	TimeTo MessageType = "time_to" // 改xx走棋了
+	//Fit    MessageType = "fit"     // 两个棋子打架了, 消息体中包含结果
+	End MessageType = "end" // 结束, 消息体包含结果(谁胜利了)
 
 )
 
@@ -63,15 +64,21 @@ type SetPieceMsgRaw struct {
 }
 
 type MoveMsgRaw struct {
-	Form     Point `json:"form"`
-	To       Point `json:"to"`
-	PlayerId int64 `json:"player_id,omitempty"`
+	Form Point `json:"form"`
+	To   Point `json:"to"`
+
+	PlayerId  int64  `json:"player_id,omitempty"`
+	FitResult string `json:"fit_result,omitempty"` // 打架结果
 }
 
 type GetRoomRaw struct {
 	Status       RoomStatus   `json:"status"`
 	PlayerStatus PlayerStatus `json:"player_status"`
 	TablePieces  TablePieces  `json:"table_pieces"`
+}
+
+type TimeToRaw struct {
+	PlayerId int64 `json:"player_id"` // 该谁走棋
 }
 
 func NewErrorMsg(err error) *Message {

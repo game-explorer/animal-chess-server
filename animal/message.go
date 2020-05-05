@@ -146,18 +146,35 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			return
 		}
 
+		ps, _ := room.PlayerStatus.Get(playerId)
+
+		if ps.IsP1() {
+			err = m.Pieces.ValidateSet("p1")
+			if err != nil {
+				return
+			}
+		} else {
+			err = m.Pieces.ValidateSet("p2")
+			if err != nil {
+				return
+			}
+		}
+
 		err = room.PlayerStatus.Ready(playerId)
 		if err != nil {
 			return
 		}
 
 		// 更新房间中的棋子
-		ps, _ := room.PlayerStatus.Get(playerId)
 		if ps.IsP1() {
 			// p1
-			room.TablePieces.P1 = m.Pieces
+			room.TablePieces.P1 = &model.TablePiecesOne{
+				Pieces: m.Pieces,
+			}
 		} else {
-			room.TablePieces.P2 = m.Pieces
+			room.TablePieces.P2 = &model.TablePiecesOne{
+				Pieces: m.Pieces,
+			}
 		}
 
 		// 发送消息给房间内所有人
@@ -183,7 +200,13 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 				Raw:  nil,
 			})...)
 
-			// 通知谁先手
+			// 通知p1走棋
+			p1, _ := room.PlayerStatus.GetP1()
+			room.TimeToPlayerId = p1.PlayerId
+			rsp = append(rsp, buildRsp(ids, model.Message{
+				Type: model.TimeTo,
+				Raw:  buildJson(model.TimeToRaw{PlayerId: p1.PlayerId}),
+			})...)
 		}
 
 		// 记得保存房间
@@ -221,22 +244,23 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			return
 		}
 
+		if playerId != room.TimeToPlayerId {
+			err = errors.New("不该您走棋")
+			return
+		}
+
 		ps, _ := room.PlayerStatus.Get(playerId)
+		fitResult := ""
 		if ps.IsP1() {
-			err = room.TablePieces.P1.Move(m.Form, m.To)
+			fitResult, err = room.TablePieces.Move("p1", m.Form, m.To)
 			if err != nil {
 				return
 			}
 		} else {
-			err = room.TablePieces.P2.Move(m.Form, m.To)
+			fitResult, err = room.TablePieces.Move("p2", m.Form, m.To)
 			if err != nil {
 				return
 			}
-		}
-
-		err = r.SaveRoom(&room)
-		if err != nil {
-			return
 		}
 
 		// 发送消息给房间内所有人
@@ -248,11 +272,31 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		rsp = buildRsp(ids, model.Message{
 			Type: model.Move,
 			Raw: buildJson(model.MoveMsgRaw{
-				Form:     m.Form,
-				To:       m.To,
-				PlayerId: playerId,
+				Form:      m.Form,
+				To:        m.To,
+				PlayerId:  playerId,
+				FitResult: fitResult,
 			}),
 		})
+
+		// 通知下家走棋
+		next, e := room.PlayerStatus.Next(playerId)
+		if e != nil {
+			err = e
+			return
+		}
+		room.TimeToPlayerId = next.PlayerId
+		rsp = append(rsp, buildRsp(ids, model.Message{
+			Type: model.TimeTo,
+			Raw: buildJson(model.TimeToRaw{
+				PlayerId: next.PlayerId,
+			}),
+		})...)
+
+		err = r.SaveRoom(&room)
+		if err != nil {
+			return
+		}
 	}
 
 	return
