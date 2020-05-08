@@ -89,6 +89,21 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 				Status:   room.Status,
 			}),
 		})
+
+		// 如果是开始状态, 则发送消息给走棋人
+		if room.Status == model.PlayingStatus {
+			rsp = append(rsp, buildRsp(ids, model.Message{
+				Type: model.Start,
+				Raw:  nil,
+			})...)
+
+			// 通知p1走棋
+			rsp = append(rsp, buildRsp(ids, model.Message{
+				Type: model.TimeTo,
+				Raw:  buildJson(model.TimeToRaw{PlayerId: room.TimeToPlayerId}),
+			})...)
+		}
+
 	case model.LeaveRoom:
 		// 离开房间
 		p, exist, e := r.GetPlayer(playerId)
