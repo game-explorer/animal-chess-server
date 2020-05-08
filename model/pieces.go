@@ -167,6 +167,8 @@ func (p Pieces) ValidateSet(camp string) (err error) {
 		}
 	}
 
+	// 判断是否都是两个
+
 	return
 }
 
@@ -181,14 +183,14 @@ func (p Point) Int() (int, int) {
 }
 
 const (
-	P1Lair Point = "0-4"
-	P2Lair Point = "12-4"
+	P1Lair Point = "4-0"
+	P2Lair Point = "4-12"
 
-	P1CaveLeft  Point = "4-2"
-	P1CaveRight Point = "4-6"
+	P1CaveLeft  Point = "2-4"
+	P1CaveRight Point = "6-4"
 
-	P2CaveLeft  Point = "8-2"
-	P2CaveRight Point = "8-6"
+	P2CaveLeft  Point = "2-8"
+	P2CaveRight Point = "6-8"
 )
 
 // 数值表示是什么动物

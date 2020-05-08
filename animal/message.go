@@ -52,8 +52,11 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			err = e
 			return
 		}
-		if room.PlayerStatus.IsFull() {
-			room.Status = model.WaitReadStatus
+
+		if room.Status == model.WaitPeopleStatus {
+			if room.PlayerStatus.IsFull() {
+				room.Status = model.WaitReadStatus
+			}
 		}
 
 		// 更新房间
@@ -185,7 +188,7 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		rsp = buildRsp(ids, model.Message{
 			Type: model.SetPiece,
 			Raw: buildJson(model.SetPieceMsgRaw{
-				Pieces:   nil,
+				Pieces:   m.Pieces, // 删除对方棋子信息
 				PlayerId: playerId,
 			}),
 		})
@@ -229,7 +232,7 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 			Raw: buildJson(model.GetRoomRaw{
 				Status:       room.Status,
 				PlayerStatus: room.PlayerStatus,
-				TablePieces:  room.TablePieces,
+				TablePieces:  room.TablePieces, // 删除对方棋子信息
 			}),
 		})
 	case model.Move:
