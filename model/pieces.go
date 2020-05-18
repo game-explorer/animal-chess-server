@@ -194,15 +194,15 @@ const (
 )
 
 // 数值表示是什么动物
-// 0-7分别表示老鼠到大象
+// 1-8分别表示老鼠到大象
 type Piece int
 
 func (p1 Piece) Fit(p2 Piece) (win bool, allDie bool) {
-	if p1 == 0 && p2 == 7 {
+	if p1 == 1 && p2 == 8 {
 		win = true
 		return
 	}
-	if p1 == 7 && p2 == 0 {
+	if p1 == 8 && p2 == 1 {
 		win = false
 		return
 	}

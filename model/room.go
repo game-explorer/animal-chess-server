@@ -108,19 +108,20 @@ func (ps *PlayerStatus) Get(playerId int64) (*PlayerStatusOne, bool) {
 }
 
 func (ps *PlayerStatus) GetP1() (*PlayerStatusOne, bool) {
-	if len(*ps) < 1 {
-		return nil, false
-	}
-
-	return (*ps)[0], true
+	return ps.GetByCamp("p1")
 }
 
 func (ps *PlayerStatus) GetP2() (*PlayerStatusOne, bool) {
-	if len(*ps) < 2 {
-		return nil, false
-	}
+	return ps.GetByCamp("p2")
+}
 
-	return (*ps)[1], true
+func (ps *PlayerStatus) GetByCamp(camp string) (*PlayerStatusOne, bool) {
+	for _, v := range *ps {
+		if v.Camp == camp {
+			return v, true
+		}
+	}
+	return nil, false
 }
 
 // 下一个人

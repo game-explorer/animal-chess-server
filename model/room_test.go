@@ -2,7 +2,7 @@ package model
 
 import "testing"
 
-func TestName(t *testing.T) {
+func TestMove(t *testing.T) {
 	r := Room{}
 	r.TablePieces.P1 = &TablePiecesOne{
 		Pieces: Pieces{
@@ -24,4 +24,21 @@ func TestName(t *testing.T) {
 	}
 
 	t.Logf("%s %+v", f, r.TablePieces.P1)
+}
+
+func TestNext(t *testing.T) {
+	var ps PlayerStatus = []*PlayerStatusOne{
+		{
+			PlayerId: 6,
+			Ready:    false,
+			Camp:     "p2",
+		}, {
+			PlayerId: 7,
+			Ready:    false,
+			Camp:     "p1",
+		},
+	}
+
+	t.Log(ps.Next(6))
+
 }

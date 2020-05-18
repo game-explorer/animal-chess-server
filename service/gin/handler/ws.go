@@ -107,6 +107,11 @@ func Handle(conn *websocket.Conn) {
 	// 处理消息
 	for msg := range msgs {
 		switch msg.Type {
+		case "ping":
+			ws.SendMessage(conn, &model.Message{
+				Type: "pong",
+				Raw:  nil,
+			})
 		default:
 			rsp, err := animal.HandMessage(playerId, &msg)
 			if err != nil {
