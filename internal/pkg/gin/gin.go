@@ -2,7 +2,7 @@ package gin
 
 import (
 	"context"
-	"github.com/game-explorer/animal-chess-server/lib/log"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/log"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"

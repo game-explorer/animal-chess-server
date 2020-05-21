@@ -9,5 +9,7 @@ type Interface interface {
 
 	UpdatePlayer(p *model.Player) (err error)
 	GetPlayerByRoomId(roomId int64) (r []model.Player, err error)
-	GetPlayer(playerId int64) (r model.Player,exist bool, err error)
+	GetPlayer(playerId int64) (r model.Player, exist bool, err error)
+
+	GetOrCreatePlayer(uid string) (r model.Player, err error)
 }

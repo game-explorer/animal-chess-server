@@ -6,7 +6,7 @@ ws://localhost:9000/ws?player_id=1
 const (
 	WaitPeopleStatus RoomStatus = 1 // 等待玩家加入
 	WaitReadStatus   RoomStatus = 2 // 等待准备
-	PlayingStatus    RoomStatus = 3 // 正在游戏中
+	PlayingStatus    RoomStatus = 3 // 正在游戏中11
 	EndStatus        RoomStatus = 4 // 游戏结束
 )
 ```
@@ -27,7 +27,7 @@ raw:
 如果收到join_room消息并且status=2(准备游戏中), 则开始准备(摆放棋子)流程
 
 ```
-type: set-piece
+type: set_piece
 raw: 
   pieces: 
     "1-2": 1
@@ -118,7 +118,7 @@ raw:
 #### 该XX走棋
 
 ```
-type: timeto
+type: time_to
 raw: 
   player_id: 1
 ```

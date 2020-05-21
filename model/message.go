@@ -20,7 +20,7 @@ const (
 	JoinRoom   MessageType = "join_room"   // 加入房间
 	LeaveRoom  MessageType = "leave_room"  // 离开房间
 	GetRoom    MessageType = "get_room"    // 获取房间所有信息(重连恢复)
-	SetPiece   MessageType = "set-piece"   // 摆放棋子 并准备
+	SetPiece   MessageType = "set_piece"   // 摆放棋子 并准备
 	Move       MessageType = "move"        // 移动棋子, 如果两个棋子打架则还会包括打架结果
 
 	// 系统发送游戏的消息
@@ -64,7 +64,7 @@ type SetPieceMsgRaw struct {
 }
 
 type MoveMsgRaw struct {
-	Form Point `json:"form"`
+	From Point `json:"from"`
 	To   Point `json:"to"`
 
 	PlayerId  int64  `json:"player_id,omitempty"`

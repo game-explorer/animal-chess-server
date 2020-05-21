@@ -12,9 +12,7 @@ type MessageRsp struct {
 	Msg        model.Message
 }
 
-func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err error) {
-	r := repository.NewMysql()
-
+func HandMessage(r repository.Interface, playerId int64, msg *model.Message) (rsp []MessageRsp, err error) {
 	switch msg.Type {
 	case model.CreateRoom:
 		// 创建房间
@@ -269,12 +267,12 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		ps, _ := room.PlayerStatus.Get(playerId)
 		fitResult := ""
 		if ps.IsP1() {
-			fitResult, err = room.TablePieces.Move("p1", m.Form, m.To)
+			fitResult, err = room.TablePieces.Move("p1", m.From, m.To)
 			if err != nil {
 				return
 			}
 		} else {
-			fitResult, err = room.TablePieces.Move("p2", m.Form, m.To)
+			fitResult, err = room.TablePieces.Move("p2", m.From, m.To)
 			if err != nil {
 				return
 			}
@@ -289,7 +287,7 @@ func HandMessage(playerId int64, msg *model.Message) (rsp []MessageRsp, err erro
 		rsp = buildRsp(ids, model.Message{
 			Type: model.Move,
 			Raw: buildJson(model.MoveMsgRaw{
-				Form:      m.Form,
+				From:      m.From,
 				To:        m.To,
 				PlayerId:  playerId,
 				FitResult: fitResult,

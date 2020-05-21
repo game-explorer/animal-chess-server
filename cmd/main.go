@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/game-explorer/animal-chess-server/app/config"
-	"github.com/game-explorer/animal-chess-server/lib/log"
-	"github.com/game-explorer/animal-chess-server/lib/signal"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/log"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/signal"
 	"github.com/game-explorer/animal-chess-server/repository"
 	"github.com/game-explorer/animal-chess-server/service/gin"
 	"github.com/urfave/cli/v2"

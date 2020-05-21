@@ -1,9 +1,9 @@
 package config
 
 import (
-	"github.com/game-explorer/animal-chess-server/lib/config"
-	"github.com/game-explorer/animal-chess-server/lib/log"
-	"github.com/game-explorer/animal-chess-server/lib/orm"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/config"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/log"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/orm"
 )
 
 var App struct {

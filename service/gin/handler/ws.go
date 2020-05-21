@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/game-explorer/animal-chess-server/animal"
 	"github.com/game-explorer/animal-chess-server/app/sessionhub"
-	"github.com/game-explorer/animal-chess-server/lib/log"
-	"github.com/game-explorer/animal-chess-server/lib/ws"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/log"
+	"github.com/game-explorer/animal-chess-server/internal/pkg/ws"
 	"github.com/game-explorer/animal-chess-server/model"
 	"github.com/game-explorer/animal-chess-server/repository"
 	"github.com/gin-gonic/gin"
@@ -113,7 +113,7 @@ func Handle(conn *websocket.Conn) {
 				Raw:  nil,
 			})
 		default:
-			rsp, err := animal.HandMessage(playerId, &msg)
+			rsp, err := animal.HandMessage(r, playerId, &msg)
 			if err != nil {
 				e := ws.SendMessage(conn, model.NewErrorMsg(err))
 				if e != nil {
