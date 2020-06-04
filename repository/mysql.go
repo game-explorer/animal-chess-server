@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/game-explorer/animal-chess-server/app/config"
 	"github.com/game-explorer/animal-chess-server/internal/pkg/orm"
+	util "github.com/game-explorer/animal-chess-server/internal/pkg/rand"
 	"github.com/game-explorer/animal-chess-server/model"
 	"strings"
 	"xorm.io/core"
@@ -62,6 +63,7 @@ func (m Mysql) UpdatePlayer(p *model.Player) (err error) {
 	}
 
 	// 不存在就新建
+	p.Uid = GenUid()
 	_, err = m.engine.Insert(p)
 	if err != nil {
 		err = fmt.Errorf("mysql.Insert Player %w", err)
@@ -69,6 +71,10 @@ func (m Mysql) UpdatePlayer(p *model.Player) (err error) {
 	}
 
 	return
+}
+
+func GenUid() string {
+	return util.RandomString(32)
 }
 
 func (m Mysql) GetPlayerByRoomId(roomId int64) (r []model.Player, err error) {

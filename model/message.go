@@ -3,8 +3,9 @@ package model
 import "encoding/json"
 
 type Message struct {
-	Type MessageType     `json:"type"`
-	Raw  json.RawMessage `json:"raw"`
+	PlayerId int64           `json:"player_id,omitempty"`
+	Type     MessageType     `json:"type"`
+	Raw      json.RawMessage `json:"raw"`
 }
 
 type MessageType string
@@ -28,7 +29,13 @@ const (
 	TimeTo MessageType = "time_to" // 改xx走棋了
 	//Fit    MessageType = "fit"     // 两个棋子打架了, 消息体中包含结果
 	End MessageType = "end" // 结束, 消息体包含结果(谁胜利了)
+	// 命令动作, 将取代timeTo
+	Action MessageType = "action"
+)
 
+const (
+	ActionReady = "ready"
+	ActionMove  = "move"
 )
 
 type (
@@ -51,6 +58,11 @@ type (
 
 type LeaveRoomMsgRaw struct {
 	PlayerId int64 `json:"player_id"`
+}
+
+type ActionMsgRaw struct {
+	Timeout int `json:"timeout"`
+	Action  string `json:"action"` // move(移动棋子), (read)准备
 }
 
 type GameStatusMsgRaw struct {

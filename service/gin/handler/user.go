@@ -1,7 +1,6 @@
 package handler
 
 import (
-	util "github.com/game-explorer/animal-chess-server/internal/pkg/rand"
 	"github.com/game-explorer/animal-chess-server/repository"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -13,7 +12,7 @@ func Login(root gin.IRouter) {
 	api.GET("/login", func(ctx *gin.Context) {
 		uid, _ := ctx.Cookie("uid")
 		if uid == "" {
-			uid = genUid()
+			uid = repository.GenUid()
 		}
 
 		r := repository.NewMysql()
@@ -28,8 +27,4 @@ func Login(root gin.IRouter) {
 		ctx.SetCookie("uid", uid, 24*3600*356, "/", ctx.Request.URL.Hostname(), false, true)
 		ctx.JSON(200, p)
 	})
-}
-
-func genUid() string {
-	return util.RandomString(32)
 }

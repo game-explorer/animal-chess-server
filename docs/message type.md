@@ -141,3 +141,13 @@ type: end
 raw: 
   win_player_id: 1
 ```
+
+#### 执行动作
+服务端命令并等待客户端执行动作, 动作目前有两个: 准备 / 下棋
+
+```
+type: action
+raw: 
+  timeout: 30
+  type: move / ready
+```
